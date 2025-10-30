@@ -25,14 +25,11 @@ class UserResponse(UserBase):
 class ExpenseBase(BaseModel):
     item_name: str
     cost: float
-    day: int
-    month: int
-    year: int
-    datetime: str   # can keep as string or ISO timestamp
+  # can keep as string or ISO timestamp
 
 
-class ExpenseCreate(ExpenseBase):
-    username: str
+# class ExpenseCreate(ExpenseBase):
+#     username: str
 
 
 class ExpenseUpdate(BaseModel):
