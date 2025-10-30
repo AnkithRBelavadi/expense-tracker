@@ -6,6 +6,7 @@ from schemas import ExpenseResponse ,ExpenseBase
 from datetime import datetime
 router = APIRouter(prefix="/expenses")
 from routes.auth import get_current_user
+from sqlalchemy import func
 
 @router.post("/create")
 def create_expense(expense : ExpenseBase ,db: Session = Depends(get_db),current_user = Depends(get_current_user)):
@@ -35,3 +36,67 @@ def del_expenses(db: Session = Depends(get_db), current_user = Depends(get_curre
     db.commit()
     return {"Deleted entires":expenses_count}
     
+@router.get("/daily_sum")
+def get_daily(day: int = int(datetime.now().day), db: Session=Depends(get_db), current_user = Depends(get_current_user)):
+    
+    month = datetime.now().month
+    year= datetime.now().year
+    
+    expenses = db.query(func.sum(Expenses.cost)).filter(Expenses.username==current_user.username).filter(Expenses.year==year).filter(Expenses.month==month).filter(Expenses.day==day).scalar()
+    items = db.query(Expenses).filter(
+        Expenses.username==current_user.username,
+        Expenses.year == year,
+        Expenses.month == month,
+        Expenses.day == day
+    ).all()
+    op_dict = {
+        "Item details":[],
+        "Total":0
+    }
+    for item in items:
+        op_dict["Item details"].append([item.item_name , item.cost , item.datetime])
+        
+    op_dict["Total"]=expenses
+    
+    return op_dict
+
+@router.get("/monthly_sum")
+def get_daily(month: int , year : int ,db: Session=Depends(get_db), current_user = Depends(get_current_user)):
+    
+    
+    expenses = db.query(func.sum(Expenses.cost)).filter(Expenses.username==current_user.username).filter(Expenses.year==year).filter(Expenses.month==month).scalar()
+    items = db.query(Expenses).filter(
+        Expenses.username==current_user.username,
+        Expenses.year == year,
+        Expenses.month == month
+    ).all()
+    op_dict = {
+        "Item details":[],
+        "Total":0
+    }
+    for item in items:
+        op_dict["Item details"].append([item.item_name , item.cost , item.datetime])
+        
+    op_dict["Total"]=expenses
+    
+    return op_dict
+
+@router.get("/yearly_sum")
+def get_daily( year : int ,db: Session=Depends(get_db), current_user = Depends(get_current_user)):
+    
+    
+    expenses = db.query(func.sum(Expenses.cost)).filter(Expenses.username==current_user.username).filter(Expenses.year==year).scalar()
+    items = db.query(Expenses).filter(
+        Expenses.username==current_user.username,
+        Expenses.year == year
+    ).all()
+    op_dict = {
+        "Item details":[],
+        "Total":0
+    }
+    for item in items:
+        op_dict["Item details"].append([item.item_name , item.cost , item.datetime])
+        
+    op_dict["Total"]=expenses
+    
+    return op_dict
