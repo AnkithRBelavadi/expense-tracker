@@ -9,7 +9,7 @@ from routes.auth import get_current_user
 from sqlalchemy import func
 
 @router.post("/create")
-def create_expense(expense : ExpenseBase ,db: Session = Depends(get_db),current_user = Depends(get_current_user)):
+async def create_expense(expense : ExpenseBase ,db: Session = Depends(get_db),current_user = Depends(get_current_user)):
     
     new_expense = Expenses(
     username=current_user.username,
@@ -26,18 +26,23 @@ def create_expense(expense : ExpenseBase ,db: Session = Depends(get_db),current_
     return new_expense
 
 @router.get("/list")
-def lisitng_expenses(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+async def lisitng_expenses(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     expenses = db.query(Expenses).filter(Expenses.username == current_user.username).all()
     return expenses
 
+@router.get("/list_all")
+async def lisitng_expenses(db: Session = Depends(get_db)):
+    expenses = db.query(Expenses).all()
+    return expenses
+
 @router.delete("/list")
-def del_expenses(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+async def del_expenses(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     expenses_count = db.query(Expenses).filter(Expenses.username==current_user.username).delete()
     db.commit()
     return {"Deleted entires":expenses_count}
     
 @router.get("/daily_sum")
-def get_daily(day: int = int(datetime.now().day), db: Session=Depends(get_db), current_user = Depends(get_current_user)):
+async def get_daily(day: int = int(datetime.now().day), db: Session=Depends(get_db), current_user = Depends(get_current_user)):
     
     month = datetime.now().month
     year= datetime.now().year
@@ -61,7 +66,7 @@ def get_daily(day: int = int(datetime.now().day), db: Session=Depends(get_db), c
     return op_dict
 
 @router.get("/monthly_sum")
-def get_daily(month: int , year : int ,db: Session=Depends(get_db), current_user = Depends(get_current_user)):
+async def get_daily(month: int , year : int ,db: Session=Depends(get_db), current_user = Depends(get_current_user)):
     
     
     expenses = db.query(func.sum(Expenses.cost)).filter(Expenses.username==current_user.username).filter(Expenses.year==year).filter(Expenses.month==month).scalar()
@@ -82,7 +87,7 @@ def get_daily(month: int , year : int ,db: Session=Depends(get_db), current_user
     return op_dict
 
 @router.get("/yearly_sum")
-def get_daily( year : int ,db: Session=Depends(get_db), current_user = Depends(get_current_user)):
+async def get_daily( year : int ,db: Session=Depends(get_db), current_user = Depends(get_current_user)):
     
     
     expenses = db.query(func.sum(Expenses.cost)).filter(Expenses.username==current_user.username).filter(Expenses.year==year).scalar()
